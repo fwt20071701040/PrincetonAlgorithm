@@ -3,7 +3,7 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
 
-	private boolean[][] isOpenFlag;
+	private byte[] flag;
 	private final WeightedQuickUnionUF wqf;
 	//used to decide whether the top and buttom sites are connected
 	private final WeightedQuickUnionUF backwash;
@@ -22,7 +22,7 @@ public class Percolation {
 			throw new IllegalArgumentException();
 		}
 		num = n;
-		isOpenFlag = new boolean[n + 1][n + 1];
+		flag = new byte[n * n];
 		//here the matrix is n+1*n+1, other than n*n.The reason for this is making
 		//the two dimensional array correspond to the pecolation model which is n*n 
 		//and the rows&cols is range from 1 to n.
@@ -61,7 +61,7 @@ public class Percolation {
 			count++;
 			int[] dx = {-1, 1, 0, 0};
 			int[] dy = {0, 0, -1, 1};
-			isOpenFlag[row][col] = true;
+			flag[xyTo1D(row, col)] = 1;
 			if (row == 1) {
 				
 				wqf.union(virtualTop, xyTo1D(row, col));
@@ -111,7 +111,7 @@ public class Percolation {
 	public boolean isOpen(int row, int col) {
 		
 		isValidBounds(row, col);
-		return isOpenFlag[row][col];
+		return flag[xyTo1D(row, col)] == 1 || flag[xyTo1D(row, col)] == 2;
 	}
 	private void isValidBounds(int row, int col) {
         if (row < 1 || row > num)
