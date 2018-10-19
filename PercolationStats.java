@@ -55,7 +55,7 @@ public class PercolationStats {
 		
 		Stopwatch sw = new Stopwatch();
 		double startTime = sw.elapsedTime();
-		PercolationStats percoStats = new PercolationStats(200, 100);
+		PercolationStats percoStats = new PercolationStats(2000, 10);
 		StdOut.println("mean                    = " + percoStats.mean());
 		StdOut.println("stddev                  = " + percoStats.stddev());
 		StdOut.println("95% confidence interval = " + "[" + 

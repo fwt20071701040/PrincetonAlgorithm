@@ -3,16 +3,17 @@ import edu.princeton.cs.algs4.WeightedQuickUnionUF;
 
 public class Percolation {
 
-	private byte[] flag;
-	private final WeightedQuickUnionUF wqf;
-	//used to decide whether the top and buttom sites are connected
 	private final WeightedQuickUnionUF backwash;
 	/*used to avoid backwash brought by the introduction of virtual sites,but this
 	 * trick may consumes more space
 	*/
-	private final int num;//the number of rows or columns
-	private final int virtualTop;//the virtual top site
-	private final int virtualBottom;//the virtual buttom site
+	private int n;//the number of rows or columns
+	private byte[] flag;
+	//used to decide whether the top and buttom sites are connected
+	private final byte OPEN = 1;
+	private final byte CONNECTTHETOP = 2;
+	private final byte CONNECTTHEBOTTOM = 4;
+	private final byte PERCOLATION = 7;
 	private boolean isPercolated;
 	private int count;
 	public Percolation(int n) {
@@ -21,55 +22,37 @@ public class Percolation {
 			
 			throw new IllegalArgumentException();
 		}
-		num = n;
+		this.n = n;
 		flag = new byte[n * n];
 		//here the matrix is n+1*n+1, other than n*n.The reason for this is making
 		//the two dimensional array correspond to the pecolation model which is n*n 
 		//and the rows&cols is range from 1 to n.
-		wqf = new WeightedQuickUnionUF(n * n + 2);
-		backwash = new WeightedQuickUnionUF(n * n + 1);
+		backwash = new WeightedQuickUnionUF(n * n);
 		//the backwash object should not have buttom site
-		virtualTop = n * n;
-		virtualBottom = n * n + 1;
 		isPercolated = false;
-		/*for (int i = 1; i < n + 1; i++) {
-			
-			for (int j = 1; j < n + 1; j++) {
-				
-				isOpenFlag[i][j] = false;
-			}
-		}boolean array is initialed to false
-		int rowsOrCols = isOpenFlag.length - 1;
-		for (int i = 0; i < rowsOrCols; i++) {
-			
-			wqf.union(n * n, i);
-		}
-		for (int i = rowsOrCols * rowsOrCols - 1; i > rowsOrCols * rowsOrCols - rowsOrCols - 1; i--) {
-			
-			wqf.union(n * n + 1, i);
-		}*/
 	} 
 	// create n-by-n grid, with all sites blocked
 	private int xyTo1D(int row, int col) {
 		
-		return (row - 1) * num + col - 1;
+		return (row - 1) * n + col - 1;
 	}
 	public void open(int row, int col) {
 		
 		isValidBounds(row, col);
 		if (!isOpen(row, col)) {
+			
 			count++;
 			int[] dx = {-1, 1, 0, 0};
 			int[] dy = {0, 0, -1, 1};
-			flag[xyTo1D(row, col)] = 1;
+			int idx = xyTo1D(row, col);
+			flag[idx] = OPEN;
 			if (row == 1) {
 				
-				wqf.union(virtualTop, xyTo1D(row, col));
-				backwash.union(virtualTop, xyTo1D(row, col));
+				flag[idx] = (byte) (flag[idx] | CONNECTTHETOP);
 			}
-			if (row == num) {
+			if (row == n) {
 				
-				wqf.union(virtualBottom, xyTo1D(row, col));
+				flag[idx] = (byte) (flag[idx] | CONNECTTHEBOTTOM);
 			}
 			for (int i = 0; i < 4; i++) {
 				
@@ -77,9 +60,16 @@ public class Percolation {
 				int posY = col + dy[i];
 				if (isPosValid(posX, posY) && isOpen(posX, posY)) {
 					
-					wqf.union(xyTo1D(row, col), xyTo1D(posX, posY));
-					backwash.union(xyTo1D(row, col), xyTo1D(posX, posY));
+					int rootidx = backwash.find(xyTo1D(posX, posY));
+					flag[idx] = (byte) (flag[rootidx] | flag[idx]);
+					backwash.union(xyTo1D(posX, posY), idx);
 				}
+			}
+			int rootidx = backwash.find(xyTo1D(row, col));
+			flag[rootidx] = (byte) (flag[idx] | flag[rootidx]);
+			if (flag[rootidx] == 7) {
+				
+				isPercolated = true;
 			}
 			/*if (row - 1 >= 1 && isOpenFlag[row - 1][col]) {
 				
@@ -106,17 +96,17 @@ public class Percolation {
 	// open site (row, col) if it is not open already
 	private boolean isPosValid(int pRow, int pCol) {
 		
-		return pRow >= 1 && pRow <= num && pCol >= 1 && pCol <= num;
+		return pRow >= 1 && pRow <= n && pCol >= 1 && pCol <= n;
 	}
 	public boolean isOpen(int row, int col) {
 		
 		isValidBounds(row, col);
-		return flag[xyTo1D(row, col)] == 1 || flag[xyTo1D(row, col)] == 2;
+		return flag[xyTo1D(row, col)] != 0;
 	}
 	private void isValidBounds(int row, int col) {
-        if (row < 1 || row > num)
+        if (row < 1 || row > n)
             throw new IllegalArgumentException("Row index out of bounds");
-        if (col < 1 || col > num)
+        if (col < 1 || col > n)
             throw new IllegalArgumentException("column index out of bounds");
     }   
 
@@ -124,7 +114,9 @@ public class Percolation {
 	public boolean isFull(int row, int col) {
 		
 		isValidBounds(row, col);
-		return backwash.connected(virtualTop, xyTo1D(row, col));
+		int idx = xyTo1D(row, col);
+		int rootidx = backwash.find(idx);
+		return flag[rootidx] == 5 || flag[rootidx] == 7;
 	}
 	// is site (row, col) full?
 	public int numberOfOpenSites() {
@@ -134,14 +126,7 @@ public class Percolation {
 	// number of open sites
 	public boolean percolates() {
 		
-		if (isPercolated) 
-            return true;
-        if (wqf.connected(virtualTop, virtualBottom)) {
-        	
-            isPercolated = true;
-            return true;
-        }
-        return false;  
+        return isPercolated;  
 	} 
 	// does the system percolate?
 	public static void main(String[] args) {
@@ -209,7 +194,7 @@ public class Percolation {
 //			validate(p);
 //			while (parent[p] != p) {
 //				
-//				parent[p] = parent[parent[p]];
+////				parent[p] = parent[parent[p]];
 //				p = parent[p];
 //			}
 //			return p;
