@@ -29,7 +29,6 @@ public class Percolation {
 		//and the rows&cols is range from 1 to n.
 		backwash = new WeightedQuickUnionUF(n * n);
 		//the backwash object should not have buttom site
-		isPercolated = false;
 	} 
 	// create n-by-n grid, with all sites blocked
 	private int xyTo1D(int row, int col) {
@@ -67,30 +66,10 @@ public class Percolation {
 			}
 			int rootidx = backwash.find(xyTo1D(row, col));
 			flag[rootidx] = (byte) (flag[idx] | flag[rootidx]);
-			if (flag[rootidx] == 7) {
+			if (flag[rootidx] == PERCOLATION) {
 				
 				isPercolated = true;
 			}
-			/*if (row - 1 >= 1 && isOpenFlag[row - 1][col]) {
-				
-				wqf.union(xyTo1D(row - 1, col), xyTo1D(row, col));
-				backwash.union(xyTo1D(row - 1, col), xyTo1D(row, col));
-			}
-			if (row + 1 <= numPerRowOrCol && isOpenFlag[row + 1][col]) {
-				
-				wqf.union(xyTo1D(row + 1, col), xyTo1D(row, col));
-				backwash.union(xyTo1D(row + 1, col), xyTo1D(row, col));
-			}
-			if (col - 1 >= 1 && isOpenFlag[row][col - 1]) {
-				
-				wqf.union(xyTo1D(row, col - 1), xyTo1D(row, col));
-				backwash.union(xyTo1D(row, col - 1), xyTo1D(row, col));
-			}
-			if (col + 1 <= numPerRowOrCol && isOpenFlag[row][col + 1]) {
-				
-				wqf.union(xyTo1D(row, col + 1), xyTo1D(row, col));
-				backwash.union(xyTo1D(row, col + 1), xyTo1D(row, col));
-			}*/
 		}
 	}  
 	// open site (row, col) if it is not open already
@@ -101,7 +80,7 @@ public class Percolation {
 	public boolean isOpen(int row, int col) {
 		
 		isValidBounds(row, col);
-		return flag[xyTo1D(row, col)] != 0;
+		return (flag[xyTo1D(row, col)] & OPEN) == OPEN;
 	}
 	private void isValidBounds(int row, int col) {
         if (row < 1 || row > n)
@@ -116,7 +95,8 @@ public class Percolation {
 		isValidBounds(row, col);
 		int idx = xyTo1D(row, col);
 		int rootidx = backwash.find(idx);
-		return flag[rootidx] == 5 || flag[rootidx] == 7;
+		return (flag[rootidx] & CONNECTTHETOP) == CONNECTTHETOP || 
+				(flag[rootidx] & PERCOLATION) == PERCOLATION;
 	}
 	// is site (row, col) full?
 	public int numberOfOpenSites() {
@@ -152,83 +132,6 @@ public class Percolation {
 			System.out.println(numOfOpenSites[i]);
 		}
 	}
-//	private class WeightedQuickUnionUF {
-//		
-//		private int[] parent;
-//		private int[] size;
-//		private int count;
-//		private WeightedQuickUnionUF(int n) {
-//			
-//			count = n;
-//			parent = new int[n];
-//			size = new int[n];
-//			for (int i = 0; i < n; i++) {
-//				
-//				parent[i] = i;
-//				size[i] = 1;
-//			}
-//		}
-//		
-//		private void union(int p, int q) {
-//			
-//			int rootP = find(p);
-//			int rootQ = find(q);
-//			if (rootP == rootQ) {
-//				
-//				return;
-//			}
-//			if (size[rootP] > size[rootQ]) {
-//				
-//				parent[rootQ] = rootP;
-//				size[rootP] += size[rootQ];
-//			} else {
-//				
-//				parent[rootP] = rootQ;
-//				size[rootQ] += size[rootP];
-//			}
-//			count--;
-//		}
-//		
-//		private int find(int p) {
-//			
-//			validate(p);
-//			while (parent[p] != p) {
-//				
-////				parent[p] = parent[parent[p]];
-//				p = parent[p];
-//			}
-//			return p;
-//		}
-//		
-//		private boolean connected(int p, int q) {
-//			
-//			return find(p) == find(q);
-//		}
-//		
-//		private int count() {
-//			
-//			return count;
-//		}
-//		
-//		private void validate(int p) {
-//	        int n = parent.length;
-//	        if (p < 0 || p >= n) {
-//	            throw new IllegalArgumentException("index " + p + " is not between 0 and " + (n-1));  
-//	        }
-//	    }
-////		private static void main(String[] args) {
-////			
-////			WeightedQuickUnionUF wqf = new WeightedQuickUnionUF(10);
-////			if (!wqf.connected(1, 3)) {
-////				
-////				wqf.union(1, 3);
-////			}
-////			for (int i = 0; i < 5; i++) {
-////				
-////				StdOut.println(wqf.parent[i]);
-////			}
-////		}
-//	}
 }
 
 
