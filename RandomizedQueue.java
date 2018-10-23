@@ -59,11 +59,8 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 		emptyQueueValid();
 		int idx = StdRandom.uniform(N);
 		Object item = items[idx];
-		for (int i = idx + 1; i < N; i++) {
-
-			items[i - 1] = items[i];
-		}
-		items[--N] = null;
+		items[idx] = items[--N];
+		items[N] = null;
 		if (N == items.length / 4) {
 
 			resize(items.length / 2);
